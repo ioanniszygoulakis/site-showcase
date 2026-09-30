@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/templates/backgrounds.js"></script>
+<style>
+  :root {
+    --ink: #0e0e11; --panel: #151519; --raised: #1c1c21; --line: #26262d; --line-2: #33333c;
+    --text: #ececf0; --muted: #8f8f9b; --faint: #5e5e69;
+    --amber: #ffb547; --amber-ink: #1c1304; --amber-soft: rgba(255, 181, 71, .13); --danger: #ff8474;
+    --sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --r: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--ink); color: var(--text); font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: -.01em; }
+  [hidden] { display: none !important; }
+
+  /* ── Top bar ─────────────────────────────── */
+  .top { height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; margin-right: 8px; }
+  .tally { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+  .url { flex: 1; min-width: 180px; height: 40px; padding: 0 14px; background: var(--ink); border: 1px solid var(--line-2); border-radius: var(--r); outline: none; font-size: 14px; }
+  .url:focus { border-color: var(--amber); }
+  .btn { height: 40px; padding: 0 16px; border-radius: var(--r); border: 1px solid var(--line-2); background: var(--raised); font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { border-color: var(--faint); }
+  .btn.primary { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .btn.small { height: 30px; padding: 0 11px; font-size: 13px; }
+
+  /* Segmented control */
+  .seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--ink); border: 1px solid var(--line); border-radius: var(--r); padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: none; color: var(--muted); padding: 6px 11px; border-radius: 7px; font-size: 13px; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--line-2); color: var(--text); }
+  .seg.full { display: grid; width: 100%; }
+
+  /* ── Workspace ───────────────────────────── */
+  .work { display: grid; grid-template-columns: 400px 1fr; height: calc(100vh - 64px); }
+  aside { border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+  .tabs { display: flex; gap: 4px; padding: 10px 12px 0; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; background: none; color: var(--muted); padding: 10px 10px 12px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; gap: 6px; align-items: center; }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--amber); }
+  .count { font-family: var(--mono); font-size: 11px; color: var(--amber); background: var(--amber-soft); padding: 1px 6px; border-radius: 20px; }
+  .panel { flex: 1; overflow-y: auto; padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+  .group h3 { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 10px; letter-spacing: .01em; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 0; min-height: 44px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row small { display: block; color: var(--muted); font-size: 12px; }
+  .row output { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 64px; text-align: right; }
+  .range { display: flex; align-items: center; gap: 10px; }
+  input[type=range] { width: 124px; accent-color: var(--amber); }
+  .toggle { appearance: none; width: 34px; height: 20px; border-radius: 20px; background: var(--line-2); position: relative; flex: none; transition: background .15s; cursor: pointer; }
+  .toggle::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .toggle:checked { background: var(--amber); }
+  .toggle:checked::after { transform: translateX(14px); background: var(--amber-ink); }
+  .off { opacity: .38; pointer-events: none; }
+  .note { color: var(--muted); font-size: 13px; background: var(--raised); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+  .note.warn { border-color: rgba(255, 181, 71, .4); color: var(--text); }
+  .note .btn { margin-top: 10px; }
+
+  /* Sections */
+  .empty { text-align: center; padding: 28px 16px; border: 1px dashed var(--line-2); border-radius: 14px; color: var(--muted); }
+  .empty strong { display: block; color: var(--text); font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .empty .btn { margin-top: 16px; }
+  .secs { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .sec { display: grid; grid-template-columns: 104px 1fr; gap: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--ink); }
+  .sec.focus { border-color: var(--faint); background: var(--raised); }
+  .sec-thumb { padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: var(--line); aspect-ratio: 16 / 10; align-self: start; }
+  .sec-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .sec-head strong { font-weight: 500; font-size: 13px; }
+  .sec-head .mono { color: var(--faint); }
+  .sec-stay { display: flex; align-items: center; gap: 8px; margin: 6px 0 4px; }
+  .sec-stay input { flex: 1; width: auto; min-width: 0; }
+  .sec-stay output { font-family: var(--mono); font-size: 12px; min-width: 88px; text-align: right; color: var(--amber); }
+  .sec-stay output.through { color: var(--faint); }
+  .pick { border: 0; background: none; padding: 2px 0; font-size: 12px; color: var(--muted); display: inline-flex; gap: 5px; align-items: center; }
+  .pick::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; }
+  .pick[aria-pressed="true"] { color: var(--amber); }
+  .pick[aria-pressed="true"]::before { background: var(--amber); border-color: var(--amber); }
+  .skeleton { height: 86px; border-radius: 12px; background: linear-gradient(90deg, var(--raised), var(--line), var(--raised)); background-size: 200% 100%; animation: shimmer 1.2s infinite linear; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* Look */
+  .styles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .style { border: 1px solid var(--line); background: var(--ink); border-radius: var(--r); padding: 6px 6px 7px; color: var(--muted); font-size: 11.5px; text-align: center; }
+  .style[aria-pressed="true"] { border-color: var(--amber); color: var(--text); }
+  .pv { height: 38px; border-radius: 6px; margin-bottom: 5px; display: grid; place-items: center; background: var(--raised); overflow: hidden; }
+  .pv i { display: block; width: 62%; height: 58%; background: #e8e8ec; border-radius: 3px; }
+  .pv .chrome { border-top: 5px solid #cfcfd5; }
+  .pv .dark { background: #3a3a44; border-top: 5px solid #25252c; }
+  .pv .tilt { border-top: 5px solid #cfcfd5; transform: perspective(60px) rotateY(-14deg) rotateX(6deg); }
+  .pv .mac { width: 54%; height: 50%; border: 3px solid #0a0a0a; border-bottom-width: 4px; border-radius: 3px 3px 0 0; box-shadow: 0 4px 0 -1px #aaa; }
+  .pv .phone { width: 22%; height: 80%; border: 3px solid #0a0a0a; border-radius: 6px; }
+  .pv .plain { width: 72%; height: 70%; border-radius: 0; }
+  .presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .swatch { aspect-ratio: 1.35; border-radius: 8px; border: 1px solid var(--line-2); padding: 0; }
+  .swatch[aria-pressed="true"] { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; }
+  .color { display: flex; align-items: center; gap: 8px; background: var(--ink); border: 1px solid var(--line-2); border-radius: 8px; padding: 4px 8px 4px 4px; }
+  .color input[type=color] { width: 26px; height: 26px; border: 0; padding: 0; background: none; border-radius: 6px; cursor: pointer; }
+  .color input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  .color input[type=color]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,.15); border-radius: 6px; }
+  .color .hex { width: 70px; border: 0; background: none; outline: none; font-family: var(--mono); font-size: 12px; text-transform: uppercase; }
+  .link { border: 0; background: none; color: var(--muted); font-size: 12px; padding: 4px; }
+  .link:hover { color: var(--text); }
+
+  /* ── Main: preview, timeline, renders ────── */
+  main { overflow-y: auto; padding: 24px 28px 40px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .stage-head, .tl-head, .renders-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .stage-head h2, .tl-head h2, .renders-head h2 { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .stage { display: grid; place-items: center; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); min-height: 240px; }
+  .stage-box { position: relative; overflow: hidden; border-radius: 6px; box-shadow: 0 0 0 1px var(--line); }
+  .stage-box iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .stage-box img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+  .timeline { display: flex; gap: 2px; height: 46px; padding: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .tl-seg { min-width: 3px; border: 0; border-radius: 6px; font-family: var(--mono); font-size: 11px; overflow: hidden; white-space: nowrap; display: flex; align-items: flex-end; padding: 0 6px 5px; }
+  .tl-seg.hold { background: var(--amber-soft); color: var(--amber); box-shadow: inset 0 0 0 1px rgba(255,181,71,.35); }
+  .tl-seg.hold.focus { background: rgba(255,181,71,.3); }
+  .tl-seg.move { background: repeating-linear-gradient(135deg, var(--raised) 0 6px, var(--line) 6px 7px); cursor: default; }
+  .tl-empty { color: var(--muted); font-size: 13px; padding: 14px 16px; border: 1px dashed var(--line-2); border-radius: 12px; }
+  .legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  .job { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: var(--panel); }
+  .job header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .job h3 { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .job .msg { color: var(--muted); font-size: 13px; }
+  .job .msg.err { color: var(--danger); }
+  .bar { height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 12px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--amber); transition: width .5s; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 14px; }
+  .item { background: var(--ink); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .item video, .item img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: contain; background: #08080a; }
+  .item footer { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; font-size: 13px; gap: 8px; }
+  .item a { color: var(--amber); text-decoration: none; font-weight: 500; }
+  .renders-empty { color: var(--faint); font-size: 13px; }
+
+  @media (max-width: 980px) {
+    .top { height: auto; flex-wrap: wrap; padding: 12px 16px; }
+    .url { order: 5; flex-basis: 100%; }
+    .work { grid-template-columns: 1fr; height: auto; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); }
+    main { padding: 20px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="tally"></span>Site Showcase</div>
+  <input class="url" id="url" type="url" placeholder="Paste a website URL, e.g. clientsite.com" aria-label="Website URL">
+  <div class="seg" data-seg="device" aria-label="Device">
+    <button data-v="desktop">Desktop</button><button data-v="laptop">Laptop</button>
+    <button data-v="tablet">Tablet</button><button data-v="mobile">Mobile</button>
+  </div>
+  <button class="btn" id="scan">Scan sections</button>
+  <button class="btn primary" id="go">Generate</button>
+</header>
+
+<div class="work">
+  <aside>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="sections" aria-selected="true">Sections <span class="count" id="sec-count" hidden></span></button>
+      <button role="tab" data-tab="look">Look</button>
+      <button role="tab" data-tab="capture">Capture</button>
+      <button role="tab" data-tab="export">Export</button>
+    </nav>
+
+    <!-- Sections: what the video does -->
+    <section class="panel" data-panel="sections">
+      <div id="sections"></div>
+      <div class="group" data-requires-video>
+        <h3>Scrolling</h3>
+        <div class="row" id="auto-hero"><span>Stay on top of page<small>Lets intro animations play</small></span><span class="range"><input type="range" data-opt="startDelay" min="0" max="8" step="0.5"><output data-for="startDelay"></output></span></div>
+        <div class="row"><span>Stay on each section<small id="each-hint">0 = one continuous scroll</small></span><span class="range"><input type="range" data-opt="sectionPause" min="0" max="6" step="0.5"><output data-for="sectionPause"></output></span></div>
+        <div class="row" id="apply-all" hidden><span></span><button class="btn small" id="apply">Apply to all sections</button></div>
+        <div class="row" id="auto-bottom"><span>Stay at the bottom</span><span class="range"><input type="range" data-opt="endPause" min="0" max="6" step="0.5"><output data-for="endPause"></output></span></div>
+        <div class="row"><span>Scroll speed</span><span class="range"><input type="range" data-opt="speed" min="150" max="2000" step="50"><output data-for="speed"></output></span></div>
+        <div class="row"><span>Scroll back to top<small>Makes the video loop seamlessly</small></span><input type="checkbox" class="toggle" data-opt="scrollBack"></div>
+      </div>
+    </section>
+
+    <!-- Look: frame, format, background -->
+    <section class="panel" data-panel="look" hidden>
+      <div class="group">
+        <h3>Frame</h3>
+        <div class="styles" data-seg="style">
+          <button class="style" data-v="browser-light"><div class="pv"><i class="chrome"></i></div>Browser</button>
+          <button class="style" data-v="browser-dark"><div class="pv"><i class="dark"></i></div>Dark</button>
+          <button class="style" data-v="floating"><div class="pv"><i></i></div>Floating</button>
+          <button class="style" data-v="perspective"><div class="pv"><i class="tilt"></i></div>3D tilt</button>
+          <button class="style" data-v="macbook"><div class="pv"><i class="mac"></i></div>MacBook</button>
+          <button class="style" data-v="iphone"><div class="pv"><i class="phone"></i></div>iPhone</button>
+          <button class="style" data-v="none"><div class="pv"><i class="plain"></i></div>No frame</button>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Format</h3>
+        <div class="seg full" data-seg="format">
+          <button data-v="16:9">16:9</button><button data-v="1:1">1:1</button><button data-v="4:5">4:5</button><button data-v="9:16">9:16</button>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Background</h3>
+        <div class="presets" id="bg-presets"></div>
+        <div class="seg full" id="bg-types" style="margin: 14px 0 6px"></div>
+        <div id="bg-fields"></div>
+      </div>
+    </section>
+
+    <!-- Capture: how the page is recorded -->
+    <section class="panel" data-panel="capture" hidden>
+      <div class="group">
+        <h3>Quality</h3>
+        <div class="row"><span>Retina (2×)<small>Sharper; takes about twice as long</small></span><input type="checkbox" class="toggle" data-opt="retina"></div>
+        <div class="row"><span>Frame rate</span><div class="seg" data-seg="fps"><button data-v="30">30 fps</button><button data-v="60">60 fps</button></div></div>
+      </div>
+      <div class="group">
+        <h3>Page</h3>
+        <div class="row"><span>Hide cookie banners &amp; chat</span><input type="checkbox" class="toggle" data-opt="hideCookies"></div>
+        <div class="row"><span>Scroll method<small>Try Wheel if a site doesn't move</small></span><div class="seg" data-seg="method"><button data-v="smooth">Smooth</button><button data-v="wheel">Wheel</button></div></div>
+        <div class="row"><span>Max length<small>Only for one continuous scroll</small></span><span class="range"><input type="range" data-opt="maxDuration" min="5" max="90" step="5"><output data-for="maxDuration"></output></span></div>
+      </div>
+    </section>
+
+    <!-- Export: which files to make -->
+    <section class="panel" data-panel="export" hidden>
+      <div class="group">
+        <h3>Videos</h3>
+        <div class="row"><span>Scroll video + mockup video<small>Off = screenshots only (much faster)</small></span><input type="checkbox" class="toggle" data-opt="video"></div>
+      </div>
+      <div class="group">
+        <h3>Images</h3>
+        <div class="row"><span>Full-screen screenshot<small>Just the site, no frame or background</small></span><input type="checkbox" class="toggle" data-opt="fullscreen"></div>
+        <div class="row"><span>Thumbnails in every frame</span><input type="checkbox" class="toggle" data-opt="thumbnails"></div>
+        <div class="row" id="shot-auto"><span>Screenshot position<small>How far down to take them</small></span><span class="range"><input type="range" data-opt="shotAt" min="0" max="3" step="0.25"><output data-for="shotAt"></output></span></div>
+        <p class="note" id="shot-scanned" hidden></p>
+      </div>
+    </section>
+  </aside>
+
+  <main>
+    <div>
+      <div class="stage-head"><h2>Preview</h2><span class="mono" id="stage-cap"></span></div>
+      <div class="stage" id="stage" style="margin-top: 10px">
+        <div class="stage-box" id="stage-box">
+          <iframe id="mock" src="/templates/mockup.html" title="Mockup preview" tabindex="-1"></iframe>
+          <img id="plain" alt="" hidden>
+        </div>
+      </div>
+    </div>
+
+    <div data-requires-video>
+      <div class="tl-head">
+        <h2>Timeline</h2>
+        <span class="mono" id="tl-total"></span>
+      </div>
+      <div id="timeline" style="margin-top: 10px"></div>
+      <div class="legend" id="legend" style="margin-top: 10px"><span><i style="background: var(--amber-soft); box-shadow: inset 0 0 0 1px rgba(255,181,71,.5)"></i>Stay</span><span><i style="background: repeating-linear-gradient(135deg, var(--raised) 0 3px, var(--line-2) 3px 4px)"></i>Scroll</span></div>
+    </div>
+
+    <div>
+      <div class="renders-head"><h2>Renders</h2></div>
+      <div id="renders" style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px">
+        <p class="renders-empty" id="renders-empty">Files you generate appear here and are saved to the <span class="mono">output</span> folder.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const DEVICE_SIZES = { desktop: [1440, 900], laptop: [1280, 800], tablet: [834, 1194], mobile: [390, 844] };
+  const FORMATS = { '16:9': [1920, 1080], '1:1': [1080, 1080], '4:5': [1080, 1350], '9:16': [1080, 1920] };
+  const STYLE_NAMES = { 'browser-light': 'Browser', 'browser-dark': 'Dark browser', floating: 'Floating', perspective: '3D tilt', macbook: 'MacBook', iphone: 'iPhone', none: 'No frame' };
+  const FULL_BG = { base: '#101014', a: '#7c5cff', b: '#00c2ff', c: '#ff5fb4', angle: 135, size: 40, fade: true };
+  const DEFAULTS = {
+    url: '', device: 'desktop', style: 'browser-light', format: '16:9', bgPreset: 'aurora', background: { ...BG_PRESETS.aurora },
+    speed: 600, startDelay: 2, sectionPause: 1.5, endPause: 1, scrollBack: true, retina: true, fps: '60', method: 'smooth',
+    hideCookies: true, maxDuration: 30, video: true, fullscreen: true, thumbnails: true, shotAt: 0,
+  };
+  const secs = (v) => `${v}s`;
+  const FMT = {
+    speed: (v) => `${v} px/s`, startDelay: secs, endPause: secs, maxDuration: secs,
+    sectionPause: (v) => (v ? `${v}s` : 'Continuous'), shotAt: (v) => (v ? `${v} screens` : 'Top'),
+  };
+
+  let opts = { ...DEFAULTS };
+  try {
+    Object.assign(opts, JSON.parse(localStorage.getItem('showcase-opts')));
+    if (typeof opts.background !== 'object') Object.assign(opts, { bgPreset: 'aurora', background: { ...BG_PRESETS.aurora } });
+  } catch {}
+  const save = () => { try { localStorage.setItem('showcase-opts', JSON.stringify(opts)); } catch {} };
+
+  let scan = null;      // { url, device, width, height, max, sections: [{ y, thumb, pause }] }
+  let scanning = false;
+  let thumbIdx = 0;     // section used for screenshots/thumbnails
+  let focusIdx = 0;     // section shown in the preview
+
+  const normUrl = (u) => (u && !/^https?:\/\//i.test(u) ? `https://${u}` : u);
+  const host = () => { try { return new URL(normUrl(opts.url)).hostname.replace(/^www\./, ''); } catch { return 'yourclient.com'; } };
+  const scanValid = () => scan && scan.url === normUrl(opts.url) && scan.device === opts.device;
+
+  // ── Generic controls ─────────────────────────────
+  function syncControls() {
+    $$('[data-seg]').forEach((g) => $$('[data-v]', g).forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === String(opts[g.dataset.seg]))));
+    $$('input[data-opt]').forEach((i) => (i.type === 'checkbox' ? (i.checked = !!opts[i.dataset.opt]) : (i.value = opts[i.dataset.opt])));
+    $$('output[data-for]').forEach((o) => (o.textContent = (FMT[o.dataset.for] ?? String)(opts[o.dataset.for])));
+    $$('[data-requires-video]').forEach((el) => el.classList.toggle('off', !opts.video));
+    save();
+  }
+  function update() {
+    syncControls();
+    renderSectionsMode();
+    renderTimeline();
+    drawPreview();
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-seg] [data-v]');
+    if (!b) return;
+    const key = b.closest('[data-seg]').dataset.seg;
+    opts[key] = b.dataset.v;
+    if (key === 'device') {
+      if (b.dataset.v === 'mobile' && ['browser-light', 'browser-dark', 'macbook'].includes(opts.style)) opts.style = 'iphone';
+      if (b.dataset.v !== 'mobile' && opts.style === 'iphone') opts.style = 'browser-light';
+      renderSections();
+    }
+    update();
+  });
+  $$('input[data-opt]').forEach((i) => i.addEventListener('input', () => {
+    opts[i.dataset.opt] = i.type === 'checkbox' ? i.checked : +i.value;
+    update();
+  }));
+  $('#url').value = opts.url;
+  $('#url').addEventListener('input', (e) => { opts.url = e.target.value.trim(); save(); renderSections(); update(); });
+  $('#url').addEventListener('keydown', (e) => e.key === 'Enter' && runScan());
+
+  // Tabs
+  $$('[role=tab]').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
+  function showTab(name) {
+    $$('[role=tab]').forEach((t) => t.setAttribute('aria-selected', t.dataset.tab === name));
+    $$('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== name));
+  }
+
+  // ── Background editor ────────────────────────────
+  $('#bg-presets').innerHTML = Object.keys(BG_PRESETS).map((k) => `<button class="swatch" data-preset="${k}" title="${k[0].toUpperCase() + k.slice(1)}" aria-label="${k} background"></button>`).join('');
+  $$('#bg-presets .swatch').forEach((b) => (b.style.background = bgCSS(BG_PRESETS[b.dataset.preset], 0.3)));
+  $('#bg-types').innerHTML = Object.entries(BG_TYPES).map(([k, t]) => `<button data-type="${k}">${t.label}</button>`).join('');
+  $('#bg-presets').addEventListener('click', (e) => {
+    const k = e.target.closest('[data-preset]')?.dataset.preset;
+    if (!k) return;
+    opts.bgPreset = k;
+    opts.background = { ...BG_PRESETS[k] };
+    renderBg();
+  });
+  $('#bg-types').addEventListener('click', (e) => {
+    const type = e.target.closest('[data-type]')?.dataset.type;
+    if (!type) return;
+    opts.background = { ...FULL_BG, ...opts.background, type };
+    if (type === 'gradient' && !opts.background.b) opts.background.b = FULL_BG.b;
+    opts.bgPreset = null;
+    renderBg();
+  });
+  function setBg(key, value) {
+    opts.background = { ...opts.background, [key]: value };
+    opts.bgPreset = null;
+    $$('#bg-presets .swatch').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+    save();
+    drawPreview();
+  }
+  function colorField(key, label, optional) {
+    const v = opts.background[key];
+    const row = document.createElement('div');
+    row.className = 'field';
+    if (optional && !v) {
+      row.innerHTML = `<span>${label}</span><button class="link">+ Add color</button>`;
+      row.querySelector('button').onclick = () => { setBg(key, '#b06ab3'); renderBg(); };
+      return row;
+    }
+    row.innerHTML = `<span>${label}</span><span style="display:flex;align-items:center;gap:4px">${optional ? '<button class="link" aria-label="Remove color">Remove</button>' : ''}
+      <label class="color"><input type="color" aria-label="${label}"><input class="hex" maxlength="7" spellcheck="false" aria-label="${label} hex"></label></span>`;
+    const [picker, hex] = $$('input', row);
+    picker.value = hex.value = v;
+    picker.oninput = () => { hex.value = picker.value; setBg(key, picker.value); };
+    hex.oninput = () => { if (/^#[0-9a-f]{6}$/i.test(hex.value)) { picker.value = hex.value; setBg(key, hex.value); } };
+    if (optional) row.querySelector('.link').onclick = () => { setBg(key, ''); renderBg(); };
+    return row;
+  }
+  function rangeField(key, label, min, max, step, unit) {
+    const row = document.createElement('div');
+    row.className = 'field';
+    row.innerHTML = `<span>${label}</span><span class="range"><input type="range" min="${min}" max="${max}" step="${step}"><output class="mono"></output></span>`;
+    const [input, out] = [$('input', row), $('output', row)];
+    input.value = opts.background[key];
+    out.textContent = input.value + unit;
+    input.oninput = () => { out.textContent = input.value + unit; setBg(key, +input.value); };
+    return row;
+  }
+  function renderBg() {
+    const bg = opts.background;
+    const t = BG_TYPES[bg.type] ?? BG_TYPES.solid;
+    $$('#bg-presets .swatch').forEach((b) => b.setAttribute('aria-pressed', b.dataset.preset === opts.bgPreset));
+    $$('#bg-types button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.type === bg.type));
+    const box = $('#bg-fields');
+    box.replaceChildren(...Object.entries(t.fields).map(([k, label]) => colorField(k, label, bg.type === 'gradient' && k === 'c')));
+    if (t.angle) box.append(rangeField('angle', 'Angle', 0, 360, 5, '°'));
+    if (t.size) box.append(rangeField('size', bg.type === 'dots' ? 'Spacing' : 'Cell size', 12, 140, 2, 'px'));
+    if (t.fade) {
+      const row = document.createElement('div');
+      row.className = 'field';
+      row.innerHTML = '<span>Fade toward edges</span><input type="checkbox" class="toggle" aria-label="Fade toward edges">';
+      const box2 = $('input', row);
+      box2.checked = !!bg.fade;
+      box2.onchange = () => setBg('fade', box2.checked);
+      box.append(row);
+    }
+    save();
+    drawPreview();
+  }
+
+  // ── Sections ─────────────────────────────────────
+  const secName = (i, n) => (i === 0 ? 'Top of page' : i === n - 1 ? 'Bottom' : `Section ${i + 1}`);
+  const stayLabel = (i, n, v) => (v ? `stay ${v}s` : i === 0 || i === n - 1 ? 'no pause' : 'scroll through');
+
+  function renderSections() {
+    const box = $('#sections');
+    const valid = scanValid();
+    $('#sec-count').hidden = !valid;
+    if (valid) $('#sec-count').textContent = scan.sections.length;
+    if (scanning) {
+      box.innerHTML = '<div class="group"><h3>Scanning the page…</h3><div style="display:flex;flex-direction:column;gap:8px"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>';
+      return;
+    }
+    if (!scan) {
+      box.innerHTML = `<div class="empty"><strong>Plan the video section by section</strong>Scan the page to see each section and choose how long the video stays on it.<br>
+        <button class="btn primary" data-action="scan">Scan sections</button></div>`;
+      return;
+    }
+    if (!valid) {
+      box.innerHTML = `<p class="note warn">The URL or device changed since the last scan, so its sections no longer match. Generating now uses automatic stops.<br><button class="btn small" data-action="scan">Scan again</button></p>`;
+      return;
+    }
+    const n = scan.sections.length;
+    box.innerHTML = `<div class="group"><h3 style="display:flex;justify-content:space-between">${n} sections found <button class="link" data-action="scan">Scan again</button></h3><ul class="secs"></ul></div>`;
+    $('.secs', box).replaceChildren(...scan.sections.map((s, i) => {
+      const li = document.createElement('li');
+      li.className = 'sec';
+      li.dataset.i = i;
+      li.innerHTML = `<button class="sec-thumb" aria-label="Preview ${secName(i, n)}"><img alt="" src="${s.thumb}"></button>
+        <div><div class="sec-head"><strong>${secName(i, n)}</strong><span class="mono">${s.y.toLocaleString()} px</span></div>
+        <div class="sec-stay"><input type="range" min="0" max="6" step="0.5" value="${s.pause}" aria-label="Seconds to stay on ${secName(i, n)}"><output></output></div>
+        <button class="pick" aria-pressed="false">Use for thumbnails</button></div>`;
+      const [range, out] = [$('input', li), $('output', li)];
+      const paint = () => { out.textContent = stayLabel(i, n, s.pause); out.classList.toggle('through', !s.pause); };
+      paint();
+      range.oninput = () => { s.pause = +range.value; paint(); renderTimeline(); };
+      $('.sec-thumb', li).onclick = () => focusSection(i);
+      $('.pick', li).onclick = () => { thumbIdx = i; focusSection(i); markSections(); renderSectionsMode(); };
+      return li;
+    }));
+    markSections();
+  }
+  function markSections() {
+    $$('.sec').forEach((li) => {
+      li.classList.toggle('focus', +li.dataset.i === focusIdx);
+      $('.pick', li).setAttribute('aria-pressed', +li.dataset.i === thumbIdx);
+    });
+  }
+  function focusSection(i) {
+    focusIdx = i;
+    markSections();
+    renderTimeline();
+    drawPreview();
+  }
+  // Auto controls vs. per-section list
+  function renderSectionsMode() {
+    const valid = scanValid();
+    $('#auto-hero').hidden = $('#auto-bottom').hidden = valid;
+    $('#apply-all').hidden = !valid;
+    $('#each-hint').textContent = valid ? 'Set here, then apply to every section' : '0 = one continuous scroll';
+    $('#shot-auto').hidden = valid;
+    $('#shot-scanned').hidden = !valid;
+    if (valid) $('#shot-scanned').textContent = `Screenshots use “${secName(thumbIdx, scan.sections.length)}”. Pick a different section in the Sections tab.`;
+  }
+  $('#apply').onclick = () => {
+    scan.sections.forEach((s, i) => { if (i > 0 && i < scan.sections.length - 1) s.pause = opts.sectionPause; });
+    renderSections();
+    renderTimeline();
+  };
+  document.addEventListener('click', (e) => e.target.closest('[data-action=scan]') && runScan());
+
+  async function runScan() {
+    if (!opts.url) return $('#url').focus();
+    const url = normUrl(opts.url);
+    scanning = true;
+    showTab('sections');
+    renderSections();
+    $('#scan').disabled = true;
+    $('#scan').textContent = 'Scanning…';
+    try {
+      const res = await api('/api/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, device: opts.device, hideCookies: opts.hideCookies }) });
+      if (res.error) throw new Error(res.error);
+      const n = res.sections.length;
+      res.sections.forEach((s, i) => (s.pause = i === 0 ? opts.startDelay : i === n - 1 ? opts.endPause : opts.sectionPause));
+      scan = { ...res, url, device: opts.device };
+      thumbIdx = focusIdx = 0;
+    } catch (e) {
+      scan = null;
+      alert(`Couldn't scan the page: ${e.message}`);
+    }
+    scanning = false;
+    $('#scan').disabled = false;
+    $('#scan').textContent = 'Scan sections';
+    renderSections();
+    update();
+  }
+
+  // ── Timeline ─────────────────────────────────────
+  function timeline() {
+    if (!scanValid()) return null;
+    const all = scan.sections.map((s, i) => ({ ...s, i }));
+    const plan = all.filter((s, i) => i === 0 || i === all.length - 1 || s.pause > 0);
+    const segs = [{ kind: 'hold', dur: plan[0].pause, i: 0 }];
+    for (let k = 1; k < plan.length; k++) {
+      segs.push({ kind: 'move', dur: Math.max(0.8, (plan[k].y - plan[k - 1].y) / opts.speed) });
+      segs.push({ kind: 'hold', dur: plan[k].pause, i: plan[k].i });
+    }
+    if (opts.scrollBack && plan.length > 1) segs.push({ kind: 'move', dur: Math.min(3, Math.max(1, scan.max / opts.speed / 2)) }, { kind: 'hold', dur: 0.6, i: 0 });
+    return { segs, stops: plan.length - 1 };
+  }
+  const clock = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+  function renderTimeline() {
+    const t = timeline();
+    const box = $('#timeline');
+    if (!t) {
+      $('#tl-total').textContent = '';
+      $('#legend').hidden = true;
+      box.innerHTML = '<p class="tl-empty">Scan sections to see exactly what the video will do. Without a scan, it stops automatically at each section it finds.</p>';
+      return;
+    }
+    $('#legend').hidden = false;
+    const total = t.segs.reduce((a, s) => a + s.dur, 0);
+    $('#tl-total').textContent = `${clock(total)} video · ${t.stops} stops`;
+    const bar = document.createElement('div');
+    bar.className = 'timeline';
+    for (const s of t.segs.filter((s) => s.dur > 0)) {
+      const el = document.createElement(s.kind === 'hold' ? 'button' : 'span');
+      el.className = `tl-seg ${s.kind}${s.kind === 'hold' && s.i === focusIdx ? ' focus' : ''}`;
+      el.style.flexGrow = s.dur;
+      if (s.kind === 'hold') {
+        el.textContent = s.dur / total > 0.045 ? `${s.dur}s` : '';
+        el.title = `${secName(s.i, scan.sections.length)} · ${s.dur}s`;
+        el.onclick = () => { focusSection(s.i); $(`.sec[data-i="${s.i}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+      }
+      bar.append(el);
+    }
+    box.replaceChildren(bar);
+  }
+
+  // ── Live preview (the real mockup renderer) ──────
+  const placeholder = (w, h) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+    <rect width="${w}" height="${h}" fill="#f2f1ee"/>
+    <rect x="${w * .06}" y="${h * .05}" width="${w * .1}" height="${h * .035}" rx="${h * .01}" fill="#cfccc6"/>
+    <rect x="${w * .56}" y="${h * .055}" width="${w * .38}" height="${h * .025}" rx="${h * .01}" fill="#dedbd5"/>
+    <rect x="${w * .06}" y="${h * .24}" width="${w * .5}" height="${h * .07}" rx="${h * .012}" fill="#2b2a28"/>
+    <rect x="${w * .06}" y="${h * .34}" width="${w * .36}" height="${h * .07}" rx="${h * .012}" fill="#2b2a28"/>
+    <rect x="${w * .06}" y="${h * .47}" width="${w * .42}" height="${h * .025}" rx="${h * .01}" fill="#b9b6b0"/>
+    <rect x="${w * .06}" y="${h * .6}" width="${w * .14}" height="${h * .06}" rx="${h * .03}" fill="#2b2a28"/>
+    <rect x="${w * .6}" y="${h * .2}" width="${w * .34}" height="${h * .55}" rx="${h * .02}" fill="#dcd9d3"/></svg>`);
+  const frameReady = new Promise((r) => $('#mock').addEventListener('load', r, { once: true }));
+  let drawQueued = false;
+  function drawPreview() {
+    if (drawQueued) return;
+    drawQueued = true;
+    requestAnimationFrame(async () => {
+      drawQueued = false;
+      await frameReady;
+      const [W, H] = FORMATS[opts.format];
+      const valid = scanValid();
+      const [vw, vh] = valid ? [scan.width, scan.height] : DEVICE_SIZES[opts.device];
+      const src = valid ? scan.sections[focusIdx]?.thumb : placeholder(vw, vh);
+      const none = opts.style === 'none';
+      // "No frame" previews the raw screenshot at the site's own aspect ratio.
+      const [bw, bh] = none ? [vw, vh] : [W, H];
+      const stage = $('#stage');
+      const maxW = stage.clientWidth - 36;
+      const maxH = Math.max(220, Math.min(window.innerHeight * 0.52, 620));
+      const s = Math.min(maxW / bw, maxH / bh);
+      Object.assign($('#stage-box').style, { width: `${bw * s}px`, height: `${bh * s}px` });
+      $('#mock').hidden = none;
+      $('#plain').hidden = !none;
+      if (none) {
+        $('#plain').src = src;
+      } else {
+        Object.assign($('#mock').style, { width: `${W}px`, height: `${H}px`, transform: `scale(${s})` });
+        const win = $('#mock').contentWindow;
+        win.setup({ W, H, style: opts.style, ar: vw / vh, bg: opts.background, url: host() });
+        await win.setFrame(src);
+      }
+      const where = valid ? secName(focusIdx, scan.sections.length) : 'placeholder page';
+      $('#stage-cap').textContent = `${STYLE_NAMES[opts.style]} · ${opts.format} · ${where}`;
+    });
+  }
+  new ResizeObserver(() => drawPreview()).observe($('#stage'));
+
+  // ── Rendering ────────────────────────────────────
+  // fetch() only says "Failed to fetch" when the local server isn't running; say what to do instead.
+  const OFFLINE = 'Can’t reach the app. Double-click “Start Site Showcase.command”, then reload this page.';
+  const api = (path, init) => fetch(path, init).catch(() => { throw new Error(OFFLINE); }).then((r) => r.json());
+
+  $('#go').addEventListener('click', generate);
+  async function generate() {
+    if (!opts.url) return $('#url').focus();
+    const url = normUrl(opts.url);
+    const valid = scanValid();
+    const payload = {
+      ...opts, url,
+      sections: valid ? scan.sections.map(({ y, pause }) => ({ y, pause })) : undefined,
+      shotY: valid ? scan.sections[thumbIdx].y : undefined,
+    };
+    $('#go').disabled = true;
+    $('#renders-empty')?.remove();
+    const card = document.createElement('section');
+    card.className = 'job';
+    card.innerHTML = '<header><div><h3></h3><div class="msg">Starting…</div></div></header><div class="bar"><i></i></div>';
+    $('h3', card).textContent = host();
+    $('#renders').prepend(card);
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    try {
+      const { id, error } = await api('/api/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (error) throw new Error(error);
+      await poll(id, card);
+    } catch (e) {
+      $('.msg', card).textContent = e.message;
+      $('.msg', card).classList.add('err');
+      $('.bar', card)?.remove();
+    }
+    $('#go').disabled = false;
+  }
+
+  async function poll(id, card) {
+    for (let misses = 0; ; ) {
+      let job;
+      try {
+        job = await api(`/api/jobs/${id}`);
+        misses = 0;
+      } catch (e) {
+        if (++misses > 5) throw e; // ride out brief hiccups while the machine is busy rendering
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      if (job.error) throw new Error('The app was restarted, so this job was lost. Please generate again.');
+      $('.msg', card).textContent = job.message;
+      $('.bar i', card).style.width = `${Math.round(job.progress * 100)}%`;
+      if (job.status === 'error') throw new Error(job.message);
+      if (job.status === 'done') return showOutputs(job, card);
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
+
+  function showOutputs(job, card) {
+    $('.bar', card).remove();
+    $('.msg', card).textContent = `${job.outputs.length} files saved`;
+    const reveal = document.createElement('button');
+    reveal.className = 'btn small';
+    reveal.textContent = 'Open folder';
+    reveal.onclick = () => api(`/api/jobs/${job.id}/reveal`).catch((e) => alert(e.message));
+    $('header', card).append(reveal);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    for (const o of job.outputs) {
+      const src = '/output/' + o.file.split('/').map(encodeURIComponent).join('/');
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = o.kind === 'video' ? `<video src="${src}" autoplay muted loop playsinline controls></video>` : `<img src="${src}" alt="" loading="lazy">`;
+      const footer = document.createElement('footer');
+      footer.innerHTML = `<span></span><a download href="${src}">Download</a>`;
+      footer.firstChild.textContent = o.label;
+      item.append(footer);
+      grid.append(item);
+    }
+    card.append(grid);
+  }
+
+  $('#scan').addEventListener('click', runScan);
+  renderBg();
+  renderSections();
+  update();
+</script>
+</body>
+</html>

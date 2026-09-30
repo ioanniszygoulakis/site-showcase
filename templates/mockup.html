@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    display: grid; place-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --u: 1px; --w: 1000px; --ar: 1.6;
+  }
+  .stage { display: flex; flex-direction: column; align-items: center; }
+  .device { position: relative; overflow: hidden; background: #fff; }
+  .glass { position: relative; overflow: hidden; }
+  .screen { display: block; width: var(--w); aspect-ratio: var(--ar); object-fit: cover; object-position: top; }
+  .bar, .base, .island { display: none; }
+
+  /* Floating: just the site, rounded with a soft shadow */
+  .floating .device {
+    border-radius: calc(16 * var(--u));
+    box-shadow: 0 0 0 calc(1 * var(--u)) rgba(0,0,0,.06),
+                0 calc(40 * var(--u)) calc(90 * var(--u)) calc(-24 * var(--u)) rgba(0,0,0,.5),
+                0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-12 * var(--u)) rgba(0,0,0,.25);
+  }
+
+  /* Browser window (light / dark / perspective) */
+  .browser-light .device, .browser-dark .device, .perspective .device {
+    border-radius: calc(12 * var(--u));
+    box-shadow: 0 0 0 calc(1 * var(--u)) rgba(0,0,0,.1),
+                0 calc(40 * var(--u)) calc(90 * var(--u)) calc(-24 * var(--u)) rgba(0,0,0,.5),
+                0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-12 * var(--u)) rgba(0,0,0,.25);
+  }
+  .browser-light .bar, .browser-dark .bar, .perspective .bar {
+    display: flex; align-items: center; height: calc(44 * var(--u)); padding: 0 calc(16 * var(--u));
+    background: #f1f1f4; border-bottom: calc(1 * var(--u)) solid #e2e2e7;
+  }
+  .dots, .spacer { width: calc(64 * var(--u)); display: flex; gap: calc(8 * var(--u)); }
+  .dots i { width: calc(12 * var(--u)); height: calc(12 * var(--u)); border-radius: 50%; }
+  .dots i:nth-child(1) { background: #ff5f57; }
+  .dots i:nth-child(2) { background: #febc2e; }
+  .dots i:nth-child(3) { background: #28c840; }
+  .url {
+    flex: 1; max-width: 46%; margin: 0 auto; height: calc(28 * var(--u)); border-radius: calc(8 * var(--u));
+    background: #fff; color: #56565c; font-size: calc(13 * var(--u)); letter-spacing: .01em;
+    display: flex; align-items: center; justify-content: center; gap: calc(6 * var(--u));
+  }
+  .url svg { width: calc(11 * var(--u)); height: calc(11 * var(--u)); fill: currentColor; opacity: .7; }
+  .browser-dark .device { background: #1c1c20; box-shadow: 0 0 0 calc(1 * var(--u)) rgba(255,255,255,.1), 0 calc(40 * var(--u)) calc(90 * var(--u)) calc(-24 * var(--u)) rgba(0,0,0,.7); }
+  .browser-dark .bar { background: #1f1f24; border-bottom-color: #0c0c0e; }
+  .browser-dark .url { background: #2d2d33; color: #b4b4bc; }
+
+  .perspective { perspective: calc(3200 * var(--u)); }
+  .perspective .stage { transform: rotateY(-18deg) rotateX(9deg) rotateZ(2deg); }
+
+  /* MacBook */
+  .macbook .device {
+    background: #0b0b0d; padding: calc(var(--w) * .02) calc(var(--w) * .02) calc(var(--w) * .032);
+    border-radius: calc(var(--w) * .035) calc(var(--w) * .035) 0 0;
+    box-shadow: 0 0 0 calc(2 * var(--u)) #c9cbd0, inset 0 0 0 calc(1 * var(--u)) #2a2a2e;
+  }
+  .macbook .glass { border-radius: calc(var(--w) * .006); }
+  .macbook .base {
+    display: block; position: relative; width: calc(var(--w) * 1.2); height: calc(var(--w) * .032);
+    background: linear-gradient(#e6e7eb, #b4b6bc 70%, #8e9096);
+    border-radius: 0 0 calc(var(--w) * .05) calc(var(--w) * .05) / 0 0 calc(var(--w) * .03) calc(var(--w) * .03);
+    box-shadow: 0 calc(40 * var(--u)) calc(70 * var(--u)) calc(-20 * var(--u)) rgba(0,0,0,.55);
+  }
+  .macbook .base::before {
+    content: ""; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 16%; height: 36%; background: #a7a9af; border-radius: 0 0 calc(10 * var(--u)) calc(10 * var(--u));
+  }
+
+  /* iPhone */
+  .iphone .device {
+    background: #0b0b0d; padding: calc(var(--w) * .035);
+    border-radius: calc(var(--w) * .175);
+    box-shadow: 0 0 0 calc(var(--w) * .008) #34343a, 0 0 0 calc(var(--w) * .012) #0e0e10,
+                0 calc(50 * var(--u)) calc(100 * var(--u)) calc(-20 * var(--u)) rgba(0,0,0,.6);
+  }
+  .iphone .glass { border-radius: calc(var(--w) * .14); }
+  .iphone .island {
+    display: block; position: absolute; top: calc(var(--w) * .03); left: 50%; transform: translateX(-50%);
+    width: calc(var(--w) * .3); height: calc(var(--w) * .085); border-radius: 999px; background: #000;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="device">
+      <div class="bar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="url"><svg viewBox="0 0 16 16"><path d="M4 7V5a4 4 0 1 1 8 0v2h1v8H3V7h1zm2 0h4V5a2 2 0 1 0-4 0v2z"/></svg><span id="url"></span></span>
+        <span class="spacer"></span>
+      </div>
+      <div class="glass"><img id="shot" class="screen"><div class="island"></div></div>
+    </div>
+    <div class="base"></div>
+  </div>
+<script src="backgrounds.js"></script>
+<script>
+  // Lays the device out inside the W×H canvas; screen width is solved by measuring the DOM.
+  window.setup = ({ W, H, style, ar, bg, url }) => {
+    const root = document.body.style;
+    const u = Math.min(W, H) / 1080;
+    document.body.className = style;
+    document.body.style.background = bgCSS(typeof bg === 'string' ? BG_PRESETS[bg] : bg, u);
+    document.getElementById('url').textContent = url;
+    root.setProperty('--u', u + 'px');
+    root.setProperty('--ar', ar);
+    const pad = style === 'perspective' ? 0.74 : 0.8;
+    let w = W * 0.6;
+    for (let i = 0; i < 3; i++) {
+      root.setProperty('--w', w + 'px');
+      const stage = document.querySelector('.stage');
+      const { offsetWidth: sw, offsetHeight: sh } = stage;
+      w *= Math.min((W * pad) / sw, (H * pad) / sh);
+    }
+    root.setProperty('--w', w + 'px');
+  };
+
+  window.setFrame = async (src) => {
+    const img = document.getElementById('shot');
+    img.src = src;
+    await img.decode();
+  };
+</script>
+</body>
+</html>

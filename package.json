@@ -1,0 +1,17 @@
+{
+  "name": "site-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0"
+  },
+  "description": "Turn any website URL into smooth scroll videos, device mockups and portfolio thumbnails.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
