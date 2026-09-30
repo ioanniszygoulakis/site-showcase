@@ -134,7 +134,8 @@ The app opens at **http://localhost:4321**. To use another port, set `PORT` (e.g
 4. Check the **Timeline** under the preview: amber blocks are stays, striped blocks are scrolling. Click a block to preview that section.
 5. In **Look**, pick a frame, a format (16:9, 1:1, 4:5, 9:16) and a background.
 6. In **Export**, choose what to generate: videos, full-screen screenshot, thumbnails.
-7. Hit **Generate**. Progress shows under *Renders*; when it's done, preview the files inline, download them, or click **Open folder**.
+7. Hit **Generate**. Progress shows under *Renders*, and a notification tells you when it's ready.
+8. Preview the files inline and click **Download** on any of them, or **Download all** for the whole set. Files go straight to your Downloads folder with a confirmation, and the button turns into **Show in Finder**. Clicking again never creates duplicate copies.
 
 You can skip the scan: the video will then stop automatically at each section it finds, using the *Stay on each section* value.
 

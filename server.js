@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { exec, execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { render, scan } from './recorder.js';
@@ -8,8 +9,34 @@ import { render, scan } from './recorder.js';
 const PORT = process.env.PORT || 4321;
 const ROOT = import.meta.dirname;
 const OUT = path.join(ROOT, 'output');
+const DOWNLOADS = path.join(os.homedir(), 'Downloads');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mp4': 'video/mp4', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const jobs = new Map();
+
+// Copies an output file (or a whole render folder) into ~/Downloads. If an identical copy is already there it is
+// reused, so clicking Download twice never piles up "file 2", "file 3"…
+async function saveToDownloads(src) {
+  const st = await fs.promises.stat(src);
+  const ext = st.isDirectory() ? '' : path.extname(src);
+  const base = path.basename(src, ext);
+  for (let n = 1; ; n++) {
+    const dest = path.join(DOWNLOADS, n === 1 ? base + ext : `${base} ${n}${ext}`);
+    const existing = await fs.promises.stat(dest).catch(() => null);
+    if (!existing) {
+      await fs.promises.cp(src, dest, { recursive: true });
+      return { path: dest, existed: false };
+    }
+    if (existing.isDirectory() === st.isDirectory() && (st.isDirectory() || existing.size === st.size)) {
+      return { path: dest, existed: true };
+    }
+  }
+}
+
+const readJson = async (req) => {
+  let body = '';
+  for await (const chunk of req) body += chunk;
+  return JSON.parse(body);
+};
 
 const json = (res, data, status = 200) => {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -73,6 +100,26 @@ const server = http.createServer(async (req, res) => {
       console.error(e);
       return json(res, { error: e.message.split('\n')[0] }, 400);
     }
+  }
+
+  if (req.method === 'POST' && pathname === '/api/save') {
+    try {
+      const { file } = await readJson(req);
+      const src = path.join(OUT, file);
+      if (!src.startsWith(OUT + path.sep)) return json(res, { error: 'Forbidden' }, 403);
+      return json(res, await saveToDownloads(src));
+    } catch (e) {
+      return json(res, { error: e.code === 'ENOSPC' ? 'Your disk is full.' : `Couldn’t save: ${e.message}` }, 500);
+    }
+  }
+
+  // Shows a saved file in Finder (only files in Downloads or the output folder).
+  if (req.method === 'POST' && pathname === '/api/reveal') {
+    const { path: p } = await readJson(req).catch(() => ({}));
+    const file = path.resolve(String(p ?? ''));
+    if (![DOWNLOADS, OUT].some((dir) => file.startsWith(dir + path.sep))) return json(res, { error: 'Forbidden' }, 403);
+    execFile('open', ['-R', file]);
+    return json(res, { ok: true });
   }
 
   const jobMatch = pathname.match(/^\/api\/jobs\/(\w+)(\/reveal)?$/);

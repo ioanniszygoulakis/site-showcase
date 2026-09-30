@@ -149,6 +149,35 @@
   .item a { color: var(--amber); text-decoration: none; font-weight: 500; }
   .renders-empty { color: var(--faint); font-size: 13px; }
 
+  /* Download buttons: Download → Saving… → ✓ Saved → Show in Finder */
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .dl { height: 30px; min-width: 118px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--raised); font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; transition: background .2s, border-color .2s, color .2s; }
+  .dl:hover { border-color: var(--faint); }
+  .dl svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .dl[data-state="saving"] { color: var(--muted); cursor: progress; }
+  .dl[data-state="saved"] { color: var(--amber); background: var(--amber-soft); border-color: rgba(255, 181, 71, .45); }
+  .dl.pop { animation: pop .38s cubic-bezier(.2, .9, .3, 1.4); }
+  .draw { stroke-dasharray: 16; stroke-dashoffset: 16; animation: draw .35s .05s ease-out forwards; }
+  .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--amber); animation: spin .7s linear infinite; }
+  .item.flash { animation: flash 1s ease-out; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes pop { 45% { transform: scale(1.07); } }
+  @keyframes flash { from { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); } }
+
+  /* Toasts */
+  #toasts { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
+  .toast { display: flex; align-items: center; gap: 12px; width: 380px; max-width: calc(100vw - 40px); padding: 12px 12px 12px 14px; background: var(--raised); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .65); animation: toast-in .32s cubic-bezier(.2, .8, .2, 1); }
+  .toast.out { animation: toast-out .22s ease-in forwards; }
+  .toast-icon { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--amber-soft); color: var(--amber); flex: none; font-weight: 700; }
+  .toast-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .toast.err .toast-icon { background: rgba(255, 132, 116, .14); color: var(--danger); }
+  .toast-text { flex: 1; min-width: 0; }
+  .toast-text strong { display: block; font-weight: 600; font-size: 13.5px; }
+  .toast-text small { display: block; color: var(--muted); font: 12px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+  @keyframes toast-out { to { opacity: 0; transform: translateY(8px); } }
+
   @media (max-width: 980px) {
     .top { height: auto; flex-wrap: wrap; padding: 12px 16px; }
     .url { order: 5; flex-basis: 100%; }
@@ -156,7 +185,7 @@
     aside { border-right: 0; border-bottom: 1px solid var(--line); }
     main { padding: 20px 16px; }
   }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .draw { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -281,6 +310,8 @@
     </div>
   </main>
 </div>
+
+<div id="toasts" aria-live="polite"></div>
 
 <script>
   const $ = (s, el = document) => el.querySelector(s);
@@ -522,13 +553,14 @@
       thumbIdx = focusIdx = 0;
     } catch (e) {
       scan = null;
-      alert(`Couldn't scan the page: ${e.message}`);
+      toast({ title: 'Couldn’t scan the page', detail: e.message, kind: 'err' });
     }
     scanning = false;
     $('#scan').disabled = false;
     $('#scan').textContent = 'Scan sections';
     renderSections();
     update();
+    if (scan) toast({ title: `Found ${scan.sections.length} sections`, detail: 'Set how long to stay on each one' });
   }
 
   // ── Timeline ─────────────────────────────────────
@@ -621,7 +653,7 @@
 
   // ── Rendering ────────────────────────────────────
   // fetch() only says "Failed to fetch" when the local server isn't running; say what to do instead.
-  const OFFLINE = 'Can’t reach the app. Double-click “Start Site Showcase.command”, then reload this page.';
+  const OFFLINE = 'Can’t reach the app. Relaunch Site Showcase (or double-click “Start Site Showcase.command”), then reload this page.';
   const api = (path, init) => fetch(path, init).catch(() => { throw new Error(OFFLINE); }).then((r) => r.json());
 
   $('#go').addEventListener('click', generate);
@@ -674,14 +706,80 @@
     }
   }
 
+  // ── Feedback: toasts and download buttons ───────
+  const ICON = {
+    down: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.8 6.8M8 10l3.2-3.2M3 13.5h10"/></svg>',
+    check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path class="draw" d="M3.2 8.6l3 2.9 6.6-6.9"/></svg>',
+  };
+  function toast({ title, detail = '', action, kind = 'ok' }) {
+    const el = document.createElement('div');
+    el.className = `toast ${kind}`;
+    el.innerHTML = `<span class="toast-icon">${kind === 'ok' ? ICON.check : '!'}</span><div class="toast-text"><strong></strong><small></small></div>`;
+    $('strong', el).textContent = title;
+    $('small', el).textContent = detail;
+    const dismiss = () => { el.classList.add('out'); setTimeout(() => el.remove(), 230); };
+    if (action) {
+      const b = document.createElement('button');
+      b.className = 'btn small';
+      b.textContent = action.label;
+      b.onclick = () => { action.run(); dismiss(); };
+      el.append(b);
+    }
+    $('#toasts').append(el);
+    while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove();
+    setTimeout(dismiss, kind === 'ok' ? 5000 : 8000);
+  }
+  const post = (path, body) => api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const showInFinder = (p) => post('/api/reveal', { path: p }).catch((e) => toast({ title: 'Couldn’t open Finder', detail: e.message, kind: 'err' }));
+
+  // Download → Saving… → ✓ Saved → Show in Finder. Once saved, clicking again reveals the file instead of copying it again.
+  function saveButton(file, label, onSaved) {
+    const b = document.createElement('button');
+    b.className = 'dl';
+    let savedPath = null;
+    const set = (state, html) => { b.dataset.state = state; b.innerHTML = html; };
+    set('idle', `${ICON.down}<span>${label}</span>`);
+    b.onclick = async () => {
+      if (b.dataset.state === 'saving') return;
+      if (savedPath) return showInFinder(savedPath);
+      set('saving', '<i class="spin"></i><span>Saving…</span>');
+      try {
+        const r = await post('/api/save', { file });
+        if (r.error) throw new Error(r.error);
+        savedPath = r.path;
+        set('saved', `${ICON.check}<span>Saved</span>`);
+        b.classList.remove('pop');
+        void b.offsetWidth; // restart the pop animation
+        b.classList.add('pop');
+        b.title = savedPath;
+        onSaved?.();
+        toast({
+          title: r.existed ? 'Already in your Downloads' : 'Saved to Downloads',
+          detail: savedPath.split('/').pop(),
+          action: { label: 'Show in Finder', run: () => showInFinder(savedPath) },
+        });
+        setTimeout(() => set('saved', `${ICON.check}<span>Show in Finder</span>`), 1800);
+      } catch (e) {
+        set('idle', `${ICON.down}<span>${label}</span>`);
+        toast({ title: 'Couldn’t save the file', detail: e.message, kind: 'err' });
+      }
+    };
+    return b;
+  }
+
   function showOutputs(job, card) {
     $('.bar', card).remove();
-    $('.msg', card).textContent = `${job.outputs.length} files saved`;
-    const reveal = document.createElement('button');
-    reveal.className = 'btn small';
-    reveal.textContent = 'Open folder';
-    reveal.onclick = () => api(`/api/jobs/${job.id}/reveal`).catch((e) => alert(e.message));
-    $('header', card).append(reveal);
+    $('.msg', card).textContent = `${job.outputs.length} files ready`;
+    const folder = job.outputs[0]?.file.split('/')[0];
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const open = document.createElement('button');
+    open.className = 'btn small';
+    open.textContent = 'Open folder';
+    open.onclick = () => api(`/api/jobs/${job.id}/reveal`).catch((e) => toast({ title: 'Couldn’t open the folder', detail: e.message, kind: 'err' }));
+    if (folder) actions.append(saveButton(folder, 'Download all'));
+    actions.append(open);
+    $('header', card).append(actions);
     const grid = document.createElement('div');
     grid.className = 'grid';
     for (const o of job.outputs) {
@@ -690,12 +788,18 @@
       item.className = 'item';
       item.innerHTML = o.kind === 'video' ? `<video src="${src}" autoplay muted loop playsinline controls></video>` : `<img src="${src}" alt="" loading="lazy">`;
       const footer = document.createElement('footer');
-      footer.innerHTML = `<span></span><a download href="${src}">Download</a>`;
+      footer.innerHTML = '<span></span>';
       footer.firstChild.textContent = o.label;
+      footer.append(saveButton(o.file, 'Download', () => {
+        item.classList.remove('flash');
+        void item.offsetWidth;
+        item.classList.add('flash');
+      }));
       item.append(footer);
       grid.append(item);
     }
     card.append(grid);
+    toast({ title: `${$('h3', card).textContent} is ready`, detail: `${job.outputs.length} files`, action: { label: 'Open folder', run: () => open.click() } });
   }
 
   $('#scan').addEventListener('click', runScan);
