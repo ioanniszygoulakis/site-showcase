@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2b33"/>
+      <stop offset="1" stop-color="#101013"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.72" r="0.5">
+      <stop offset="0" stop-color="#ffb547" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#ffb547" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffcb70"/>
+      <stop offset="1" stop-color="#ff9d1f"/>
+    </linearGradient>
+    <pattern id="dots" width="44" height="44" patternUnits="userSpaceOnUse">
+      <circle cx="22" cy="22" r="2.6" fill="#ffffff" fill-opacity="0.07"/>
+    </pattern>
+    <clipPath id="tileClip"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+    <clipPath id="winClip"><rect x="196" y="244" width="568" height="440" rx="34"/></clipPath>
+    <filter id="tileShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Tile -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)" filter="url(#tileShadow)"/>
+  <g clip-path="url(#tileClip)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#dots)"/>
+    <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
+  </g>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="3"/>
+
+  <!-- Browser window: the page, laid out as sections -->
+  <g filter="url(#lift)">
+    <rect x="196" y="244" width="568" height="440" rx="34" fill="#f4f4f7"/>
+  </g>
+  <g clip-path="url(#winClip)">
+    <rect x="196" y="244" width="568" height="64" fill="#e2e2e8"/>
+    <circle cx="238" cy="276" r="9.5" fill="#ff5f57"/>
+    <circle cx="267" cy="276" r="9.5" fill="#febc2e"/>
+    <circle cx="296" cy="276" r="9.5" fill="#28c840"/>
+    <rect x="362" y="263" width="250" height="26" rx="13" fill="#ffffff"/>
+    <!-- hero -->
+    <rect x="236" y="346" width="276" height="30" rx="9" fill="#1d1d23"/>
+    <rect x="236" y="390" width="196" height="30" rx="9" fill="#1d1d23"/>
+    <rect x="236" y="440" width="232" height="12" rx="6" fill="#b8b8c2"/>
+    <rect x="552" y="338" width="170" height="124" rx="16" fill="#d8d8df"/>
+    <!-- next section -->
+    <rect x="236" y="496" width="150" height="150" rx="16" fill="#e1e1e7"/>
+    <rect x="402" y="496" width="150" height="150" rx="16" fill="#e1e1e7"/>
+    <!-- scroll position -->
+    <rect x="744" y="324" width="9" height="96" rx="4.5" fill="#ffb547"/>
+  </g>
+
+  <!-- Play badge -->
+  <circle cx="724" cy="688" r="146" fill="#101013"/>
+  <circle cx="724" cy="688" r="128" fill="url(#badge)"/>
+  <path d="M 694 624 L 694 752 L 800 688 Z" fill="#1c1304" stroke="#1c1304" stroke-width="14" stroke-linejoin="round"/>
+</svg>

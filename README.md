@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/logo.png" alt="Site Showcase app icon: a browser window with an amber play button" width="128">
+
 # Site Showcase
 
 **Paste a URL. Get a buttery-smooth scroll video, a polished mockup video, and portfolio-ready thumbnails.**
@@ -96,9 +98,21 @@ npm install
 npx playwright install chromium
 ```
 
-### Start it
+### Install the Mac app (recommended)
 
-Either **double-click `Start Site Showcase.command`** in Finder (the first launch installs anything missing), or run:
+```bash
+./macos/build-app.sh
+```
+
+This builds **Site Showcase.app** with its own icon and installs it in `/Applications`. Open it from Launchpad or Spotlight, then right-click its Dock icon → **Options → Keep in Dock**.
+
+The app opens in its own window, starts the tool in the background and stops it when you quit (⌘Q). It adds **File → Open Output Folder** (⇧⌘O), saves downloads to `~/Downloads`, and writes logs to `~/Library/Logs/Site Showcase.log`.
+
+> The app remembers where this folder lives. If you move the project, run `./macos/build-app.sh` again.
+
+### Or run it without the app
+
+**Double-click `Start Site Showcase.command`** in Finder (the first launch installs anything missing), or run:
 
 ```bash
 npm start
@@ -213,7 +227,8 @@ Types are `solid`, `gradient`, `mesh`, `grid` and `dots` (see `BG_TYPES` in the 
 
 | Problem | Fix |
 | --- | --- |
-| *"Can't reach the app"* | The server isn't running. Double-click `Start Site Showcase.command` (or `npm start`) and reload the page. |
+| *"Can't reach the app"* | The server isn't running. Relaunch **Site Showcase.app** (or `npm start`) and reload the page. |
+| The app says it can't find the folder | You moved the project. Run `./macos/build-app.sh` again. |
 | The site doesn't scroll in the video | Set **Capture → Scroll method** to **Wheel**. |
 | An effect hasn't finished when the video moves on | Scan sections and increase that section's **stay**. |
 | The thumbnail shows the wrong moment | Pick a different section with **Use for thumbnails**, or change its stay time: the thumbnail matches the end of that stay. |
@@ -237,6 +252,12 @@ site-showcase/
 ├── templates/
 │   ├── mockup.html               # frame renderer (also the live preview)
 │   └── backgrounds.js            # background types + presets, shared by UI and renderer
+├── macos/
+│   ├── SiteShowcase.swift        # native app: window, server lifecycle, menus, downloads
+│   ├── build-app.sh              # builds + installs Site Showcase.app
+│   ├── Info.plist
+│   ├── icon.svg                  # the app icon (rendered to .icns at build time)
+│   └── render-icon.mjs
 ├── docs/                         # README images
 └── output/                       # your renders (git-ignored)
 ```
